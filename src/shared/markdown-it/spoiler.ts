@@ -384,10 +384,10 @@ function blockquoteFn(
  * @param md
  */
 export function spoiler(md: MarkdownIt): void {
-    // TODO necessary?
-    // find all blockquote chain rules and update to be part of the spoiler chain as well
+    // Find all blockquote chain rules and update to be part of the spoiler chain as well
+    //  We clear the cache by inserting new chains below; otherwise this wouldn't work
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore TODO no public way to iterate over all rules; maybe there's a better way?
+    // @ts-ignore The only public interface over rules (md.block.ruler.getRules('')) is stripped of metadata
     (md.block.ruler.__rules__ as { alt: string[] }[]).forEach((r) => {
         const bqIndex = r.alt.indexOf("blockquote");
         if (bqIndex > -1) {
@@ -395,8 +395,15 @@ export function spoiler(md: MarkdownIt): void {
             r.alt.splice(bqIndex, 0, "spoiler");
         }
     });
+
+
+    // alt is a (poorly documented) list of blocks that can be terminated by this one.
+    //  e.g. "paragraph" blocks are terminated by basically every other block, and so the function for parsing them
+    //  runs it through all the rules that specified `alt: [ "paragraph" ]` first.
+    //
+    // Spoilers blocks are fancy block quotes, so we want to terminate the same list of blocks (including other spoilers/blockquotes)
+    // see: https://github.com/markdown-it/markdown-it/blob/0fe7ccb4b7f30236fb05f623be6924961d296d3d/lib/parser_block.mjs#L22
     md.block.ruler.before("blockquote", "spoiler", spoilerFn, {
-        // TODO stole this from blockquote, dunno what it does...
         alt: ["paragraph", "reference", "spoiler", "blockquote", "list"],
     });
 
