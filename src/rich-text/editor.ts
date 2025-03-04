@@ -43,6 +43,7 @@ import { interfaceManagerPlugin } from "../shared/prosemirror-plugins/interface-
 import { IExternalPluginProvider } from "../shared/editor-plugin";
 import { createMenuEntries } from "../shared/menu/index";
 import { createMenuPlugin } from "../shared/menu/plugin";
+import { stackSnippetRichTextDecoratorPlugin } from "../shared/plugins/stack-snippets/decorations";
 
 export interface RichTextOptions extends CommonViewOptions {
     /** Array of LinkPreviewProviders to handle specific link preview urls */
@@ -141,6 +142,9 @@ export class RichTextEditor extends BaseView {
                         tables,
                         richTextCodePasteHandler,
                         linkPasteHandler(this.options.parserFeatures),
+                        stackSnippetRichTextDecoratorPlugin(
+                            this.options.stackSnippet
+                        ),
                         ...this.externalPluginProvider.plugins.richText,
                         // IMPORTANT: the plainTextPasteHandler must be added after *all* other paste handlers
                         plainTextPasteHandler,
