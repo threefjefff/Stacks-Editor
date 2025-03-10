@@ -1,9 +1,7 @@
-import { EditorState, Transaction } from "prosemirror-state";
+import { EditorState, TextSelection } from "prosemirror-state";
 import {
     exitInclusiveMarkCommand,
     insertRichTextHorizontalRuleCommand,
-    indentCodeBlockLinesCommand,
-    unindentCodeBlockLinesCommand,
     toggleHeadingLevel,
     toggleTagLinkCommand,
     toggleWrapIn,
@@ -12,6 +10,7 @@ import {
     applyNodeSelection,
     applySelection,
     createState,
+    executeTransaction,
     testRichTextSchema,
 } from "../test-helpers";
 import { toggleMark } from "prosemirror-commands";
@@ -25,28 +24,6 @@ function getEndOfNode(state: EditorState, nodePos: number) {
     });
 
     return from;
-}
-
-const indentStr = "    ";
-const indentionBaseState = `<p>asdf</p><pre><code>in0\n${indentStr}in1\n${indentStr}${indentStr}in2\n${indentStr}${indentStr}in3\n\n${indentStr}in1\nin0</code></pre>`;
-/**
- * Applies a command to the state and expects the entire doc to resemble
- * `expected` and the selected text to resemble `expectedSelected`
- */
-function executeTransaction(
-    state: EditorState,
-    command: (
-        state: EditorState,
-        dispatch: (tr: Transaction) => void
-    ) => boolean
-) {
-    let newState = state;
-
-    const isValid = command(state, (t) => {
-        newState = state.apply(t);
-    });
-
-    return { newState, isValid };
 }
 
 describe("commands", () => {
@@ -733,7 +710,7 @@ describe("commands", () => {
         );
     });
 
-    describe("exitMarkCommand", () => {
+    describe("exitInclusiveMarkCommand", () => {
         it("all exitable marks should also be inclusive: true", () => {
             Object.keys(testRichTextSchema.marks).forEach((markName) => {
                 const mark = testRichTextSchema.marks[markName];
@@ -783,459 +760,22 @@ describe("commands", () => {
                 expect(exitInclusiveMarkCommand(state, null)).toBe(true);
             }
         );
-    });
 
-    describe("indentCodeBlockLinesCommand", () => {
-        it("should indent code block line with empty selection at start of line", () => {
-            const state = applySelection(
-                createState(indentionBaseState, []),
-                6, // start of first line of code block
-                6 // start of first line of code block
+        it("should handle the case when $cursor is null", () => {
+            // suppress console.warn
+            const consoleWarnSpy = jest
+                .spyOn(console, "warn")
+                .mockImplementation(() => {});
+
+            let state = createState("this is my state", []);
+            state = state.apply(
+                state.tr.setSelection(TextSelection.create(state.doc, 0, null))
             );
+            expect((<TextSelection>state.selection).$cursor).toBeNull();
+            expect(() => exitInclusiveMarkCommand(state, null)).not.toThrow();
 
-            const resolvedNode = state.selection.$from;
-            expect(resolvedNode.node().type.name).toBe("code_block");
-
-            const { newState, isValid } = executeTransaction(
-                state,
-                indentCodeBlockLinesCommand
-            );
-
-            expect(isValid).toBeTruthy();
-            // Test for expected new selection
-            expect(newState.selection.from).toBe(11);
-            expect(newState.selection.to).toBe(11);
-
-            expect(newState.doc).toMatchNodeTree({
-                "type.name": "doc",
-                "content": [
-                    {
-                        "type.name": "paragraph",
-                        "childCount": 1,
-                        "content": [
-                            {
-                                text: "asdf",
-                            },
-                        ],
-                    },
-                    {
-                        "type.name": "code_block",
-                        "childCount": 1,
-                        "content": [
-                            {
-                                text: `${indentStr}in0\n${indentStr}in1\n${indentStr}${indentStr}in2\n${indentStr}${indentStr}in3\n\n${indentStr}in1\nin0`,
-                            },
-                        ],
-                    },
-                ],
-            });
-        });
-
-        it("should indent code block line with empty selection at end of line", () => {
-            const state = applySelection(
-                createState(indentionBaseState, []),
-                9, // end of first line of code block
-                9 // end of first line of code block
-            );
-
-            const resolvedNode = state.selection.$from;
-            expect(resolvedNode.node().type.name).toBe("code_block");
-
-            const { newState, isValid } = executeTransaction(
-                state,
-                indentCodeBlockLinesCommand
-            );
-
-            expect(isValid).toBeTruthy();
-            // Test for expected new selection
-            expect(newState.selection.from).toBe(14);
-            expect(newState.selection.to).toBe(14);
-
-            expect(newState.doc).toMatchNodeTree({
-                "type.name": "doc",
-                "content": [
-                    {
-                        "type.name": "paragraph",
-                        "childCount": 1,
-                        "content": [
-                            {
-                                text: "asdf",
-                            },
-                        ],
-                    },
-                    {
-                        "type.name": "code_block",
-                        "childCount": 1,
-                        "content": [
-                            {
-                                text: `${indentStr}in0\n${indentStr}in1\n${indentStr}${indentStr}in2\n${indentStr}${indentStr}in3\n\n${indentStr}in1\nin0`,
-                            },
-                        ],
-                    },
-                ],
-            });
-        });
-
-        it("should indent code block line when entire line is selected", () => {
-            const state = applySelection(
-                createState(indentionBaseState, []),
-                6, // start of first line of code block
-                9 // end of first line of code block
-            );
-
-            const resolvedNode = state.selection.$from;
-            expect(resolvedNode.node().type.name).toBe("code_block");
-
-            const { newState, isValid } = executeTransaction(
-                state,
-                indentCodeBlockLinesCommand
-            );
-
-            expect(isValid).toBeTruthy();
-            // Test for expected new selection
-            expect(newState.selection.from).toBe(11);
-            expect(newState.selection.to).toBe(14);
-
-            expect(newState.doc).toMatchNodeTree({
-                "type.name": "doc",
-                "content": [
-                    {
-                        "type.name": "paragraph",
-                        "childCount": 1,
-                        "content": [
-                            {
-                                text: "asdf",
-                            },
-                        ],
-                    },
-                    {
-                        "type.name": "code_block",
-                        "childCount": 1,
-                        "content": [
-                            {
-                                text: `${indentStr}in0\n${indentStr}in1\n${indentStr}${indentStr}in2\n${indentStr}${indentStr}in3\n\n${indentStr}in1\nin0`,
-                            },
-                        ],
-                    },
-                ],
-            });
-        });
-
-        it("should indent code block lines when multiple lines are selected", () => {
-            const state = applySelection(
-                createState(indentionBaseState, []),
-                6, // start of first line of code block
-                18 // middle of third line of code block
-            );
-
-            const resolvedNode = state.selection.$from;
-            expect(resolvedNode.node().type.name).toBe("code_block");
-
-            const { newState, isValid } = executeTransaction(
-                state,
-                indentCodeBlockLinesCommand
-            );
-
-            expect(isValid).toBeTruthy();
-            // Test for expected new selection
-            expect(newState.selection.from).toBe(11);
-            expect(newState.selection.to).toBe(31);
-
-            expect(newState.doc).toMatchNodeTree({
-                "type.name": "doc",
-                "content": [
-                    {
-                        "type.name": "paragraph",
-                        "childCount": 1,
-                        "content": [
-                            {
-                                text: "asdf",
-                            },
-                        ],
-                    },
-                    {
-                        "type.name": "code_block",
-                        "childCount": 1,
-                        "content": [
-                            {
-                                text: `${indentStr}in0\n${indentStr}${indentStr}in1\n${indentStr}${indentStr}${indentStr}in2\n${indentStr}${indentStr}in3\n\n${indentStr}in1\nin0`,
-                            },
-                        ],
-                    },
-                ],
-            });
-        });
-
-        it("shouldn't indent code block lines when selection is outside of the code block", () => {
-            const state = applySelection(
-                createState(indentionBaseState, []),
-                0, // start of paragraph
-                3 // end of paragraph
-            );
-
-            const resolvedNode = state.selection.$from;
-            expect(resolvedNode.node().type.name).toBe("paragraph");
-
-            const { newState, isValid } = executeTransaction(
-                state,
-                indentCodeBlockLinesCommand
-            );
-
-            expect(isValid).toBeFalsy();
-            // Test for expected new selection
-            expect(newState.selection.from).toBe(1);
-            expect(newState.selection.to).toBe(4);
-
-            expect(newState.doc).toMatchNodeTree({
-                "type.name": "doc",
-                "content": [
-                    {
-                        "type.name": "paragraph",
-                        "childCount": 1,
-                        "content": [
-                            {
-                                text: "asdf",
-                            },
-                        ],
-                    },
-                    {
-                        "type.name": "code_block",
-                        "childCount": 1,
-                        "content": [
-                            {
-                                text: `in0\n${indentStr}in1\n${indentStr}${indentStr}in2\n${indentStr}${indentStr}in3\n\n${indentStr}in1\nin0`,
-                            },
-                        ],
-                    },
-                ],
-            });
-        });
-    });
-
-    describe("unindentCodeBlockLinesCommand", () => {
-        it("should unindent indented code block line with empty selection at start of line", () => {
-            const state = applySelection(
-                createState(indentionBaseState, []),
-                10, // start of second line of code block
-                10 // start of second line of code block
-            );
-
-            const resolvedNode = state.selection.$from;
-            expect(resolvedNode.node().type.name).toBe("code_block");
-
-            const { newState, isValid } = executeTransaction(
-                state,
-                unindentCodeBlockLinesCommand
-            );
-
-            expect(isValid).toBeTruthy();
-            // Test for expected new selection
-            expect(newState.selection.from).toBe(7);
-            expect(newState.selection.to).toBe(7);
-
-            expect(newState.doc).toMatchNodeTree({
-                "type.name": "doc",
-                "content": [
-                    {
-                        "type.name": "paragraph",
-                        "childCount": 1,
-                        "content": [
-                            {
-                                text: "asdf",
-                            },
-                        ],
-                    },
-                    {
-                        "type.name": "code_block",
-                        "childCount": 1,
-                        "content": [
-                            {
-                                text: `in0\nin1\n${indentStr}${indentStr}in2\n${indentStr}${indentStr}in3\n\n${indentStr}in1\nin0`,
-                            },
-                        ],
-                    },
-                ],
-            });
-        });
-
-        it("should unindent indented code block line with empty selection at end of line", () => {
-            const state = applySelection(
-                createState(indentionBaseState, []),
-                14, // end of second line of code block
-                14 // end of second line of code block
-            );
-
-            const resolvedNode = state.selection.$from;
-            expect(resolvedNode.node().type.name).toBe("code_block");
-
-            const { newState, isValid } = executeTransaction(
-                state,
-                unindentCodeBlockLinesCommand
-            );
-
-            expect(isValid).toBeTruthy();
-            // Test for expected new selection
-            expect(newState.selection.from).toBe(11);
-            expect(newState.selection.to).toBe(11);
-
-            expect(newState.doc).toMatchNodeTree({
-                "type.name": "doc",
-                "content": [
-                    {
-                        "type.name": "paragraph",
-                        "childCount": 1,
-                        "content": [
-                            {
-                                text: "asdf",
-                            },
-                        ],
-                    },
-                    {
-                        "type.name": "code_block",
-                        "childCount": 1,
-                        "content": [
-                            {
-                                text: `in0\nin1\n${indentStr}${indentStr}in2\n${indentStr}${indentStr}in3\n\n${indentStr}in1\nin0`,
-                            },
-                        ],
-                    },
-                ],
-            });
-        });
-
-        it("should unindent indented code block line when entire line is selected", () => {
-            const state = applySelection(
-                createState(indentionBaseState, []),
-                10, // end of second line of code block
-                14 // end of second line of code block
-            );
-
-            const resolvedNode = state.selection.$from;
-            expect(resolvedNode.node().type.name).toBe("code_block");
-
-            const { newState, isValid } = executeTransaction(
-                state,
-                unindentCodeBlockLinesCommand
-            );
-
-            expect(isValid).toBeTruthy();
-            // Test for expected new selection
-            expect(newState.selection.from).toBe(7);
-            expect(newState.selection.to).toBe(11);
-
-            expect(newState.doc).toMatchNodeTree({
-                "type.name": "doc",
-                "content": [
-                    {
-                        "type.name": "paragraph",
-                        "childCount": 1,
-                        "content": [
-                            {
-                                text: "asdf",
-                            },
-                        ],
-                    },
-                    {
-                        "type.name": "code_block",
-                        "childCount": 1,
-                        "content": [
-                            {
-                                text: `in0\nin1\n${indentStr}${indentStr}in2\n${indentStr}${indentStr}in3\n\n${indentStr}in1\nin0`,
-                            },
-                        ],
-                    },
-                ],
-            });
-        });
-
-        it("should unindent indented code block lines when multiple lines are selected", () => {
-            const state = applySelection(
-                createState(indentionBaseState, []),
-                6, // start of first line of code block
-                18 // middle of third line of code block
-            );
-
-            const resolvedNode = state.selection.$from;
-            expect(resolvedNode.node().type.name).toBe("code_block");
-
-            const { newState, isValid } = executeTransaction(
-                state,
-                unindentCodeBlockLinesCommand
-            );
-
-            expect(isValid).toBeTruthy();
-            // Test for expected new selection
-            expect(newState.selection.from).toBe(3);
-            expect(newState.selection.to).toBe(11);
-
-            expect(newState.doc).toMatchNodeTree({
-                "type.name": "doc",
-                "content": [
-                    {
-                        "type.name": "paragraph",
-                        "childCount": 1,
-                        "content": [
-                            {
-                                text: "asdf",
-                            },
-                        ],
-                    },
-                    {
-                        "type.name": "code_block",
-                        "childCount": 1,
-                        "content": [
-                            {
-                                text: `in0\nin1\n${indentStr}in2\n${indentStr}${indentStr}in3\n\n${indentStr}in1\nin0`,
-                            },
-                        ],
-                    },
-                ],
-            });
-        });
-
-        it("shouldn't unindent indented code block lines when selection is outside of the code block", () => {
-            const state = applySelection(
-                createState(indentionBaseState, []),
-                0, // start of paragraph
-                3 // end of paragraph
-            );
-
-            const resolvedNode = state.selection.$from;
-            expect(resolvedNode.node().type.name).toBe("paragraph");
-
-            const { newState, isValid } = executeTransaction(
-                state,
-                unindentCodeBlockLinesCommand
-            );
-
-            expect(isValid).toBeFalsy();
-            // Test for expected new selection
-            expect(newState.selection.from).toBe(1);
-            expect(newState.selection.to).toBe(4);
-
-            expect(newState.doc).toMatchNodeTree({
-                "type.name": "doc",
-                "content": [
-                    {
-                        "type.name": "paragraph",
-                        "childCount": 1,
-                        "content": [
-                            {
-                                text: "asdf",
-                            },
-                        ],
-                    },
-                    {
-                        "type.name": "code_block",
-                        "childCount": 1,
-                        "content": [
-                            {
-                                text: `in0\n${indentStr}in1\n${indentStr}${indentStr}in2\n${indentStr}${indentStr}in3\n\n${indentStr}in1\nin0`,
-                            },
-                        ],
-                    },
-                ],
-            });
+            // restore console.warn
+            consoleWarnSpy.mockRestore();
         });
     });
 });

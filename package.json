@@ -1,6 +1,6 @@
 {
     "name": "@stackoverflow/stacks-editor",
-    "version": "0.10.7",
+    "version": "0.10.9",
     "description": "",
     "repository": {
         "type": "git",
@@ -74,6 +74,7 @@
         "postcss": "^8.4.38",
         "postcss-loader": "^8.1.1",
         "prettier": "^3.2.5",
+        "prosemirror-test-builder": "^1.1.1",
         "standard-version": "^9.5.0",
         "ts-jest": "^29.1.2",
         "ts-loader": "^9.5.1",
