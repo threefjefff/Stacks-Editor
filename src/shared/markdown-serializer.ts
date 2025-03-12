@@ -12,6 +12,7 @@ import {
 } from "./html-helpers";
 import { IExternalPluginProvider } from "./editor-plugin";
 import MarkdownIt from "markdown-it";
+import { stackSnippetMarkdownSerializer } from "./plugins/stack-snippets/schema";
 
 // helper type so the code is a tad less messy
 export type MarkdownSerializerNodes = ConstructorParameters<
@@ -477,6 +478,8 @@ const customMarkdownSerializerNodes: MarkdownSerializerNodes = {
     spoiler(state, node) {
         state.wrapBlock(">! ", null, node, () => state.renderContent(node));
     },
+
+    ...stackSnippetMarkdownSerializer,
 };
 
 /**

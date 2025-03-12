@@ -1,6 +1,6 @@
 import { highlightPlugin } from "prosemirror-highlightjs";
 import { Node as ProsemirrorNode } from "prosemirror-model";
-import { Plugin } from "prosemirror-state";
+import { Plugin, Transaction } from "prosemirror-state";
 import { getHljsInstance } from "./hljs-instance";
 
 /*
@@ -110,11 +110,30 @@ export function CodeBlockHighlightPlugin(
     defaultFallbackLanguage: string
 ): Plugin {
     const extractor = (block: ProsemirrorNode) => {
-        const detectedLanguage = block.attrs
-            .detectedHighlightLanguage as string;
+        const detectedLanguage =
+            (block.attrs.detectedHighlightLanguage as string) ||
+            (block.attrs.language as string);
         return (
             detectedLanguage || getBlockLanguage(block, defaultFallbackLanguage)
         );
+    };
+
+    const setter = (
+        tr: Transaction,
+        node: ProsemirrorNode,
+        pos: number,
+        lanugage: string
+    ): Transaction => {
+        const attrs = { ...node.attrs };
+
+        if (node.type.name == "stack_snippet_lang") {
+            attrs["lanugage"] = lanugage;
+        } else {
+            //By default, we assume that it's a code block, and we have our specialized attr definition applied.
+            attrs["detectedHighlightLanguage"] = lanugage;
+        }
+
+        return tr.setNodeMarkup(pos, undefined, attrs);
     };
 
     const hljs = getHljsInstance();
@@ -124,5 +143,10 @@ export function CodeBlockHighlightPlugin(
         return new Plugin({});
     }
 
-    return highlightPlugin(hljs, ["code_block"], extractor);
+    return highlightPlugin(
+        hljs,
+        ["code_block", "stack_snippet_lang"],
+        extractor,
+        setter
+    );
 }

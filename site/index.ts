@@ -258,6 +258,24 @@ domReady(() => {
             id: "a11y-editor-id",
             ariaLabeledby: "a11y-editor-label",
         },
+        stackSnippet: {
+            renderer: (meta, js, css, html) => {
+                console.log(meta);
+                const lol = document.createElement("div");
+                const rofl = document.createElement("img");
+                rofl.src =
+                    "https://i.kym-cdn.com/entries/icons/original/000/021/311/free.jpg";
+                lol.appendChild(rofl);
+                return Promise.resolve(lol);
+            },
+            openSnippetsModal: (meta, js, css, html) => {
+                console.log("Fired the open modal event!");
+                console.log(`meta\n${JSON.stringify(meta)}`);
+                console.log(`js\n${JSON.stringify(js)}`);
+                console.log(`css\n${JSON.stringify(css)}`);
+                console.log(`html\n${JSON.stringify(html)}`);
+            },
+        },
     };
 
     const editorInstance = new StacksEditor(place, content.value, options);

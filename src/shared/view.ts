@@ -3,9 +3,11 @@
 // and keeps the actual code out of the bundle if consumers decide to code split/tree-shake
 import type { Node } from "prosemirror-model";
 import type { EditorView } from "prosemirror-view";
-import { EditorPlugin } from "./editor-plugin";
+import { EditorPlugin, IExternalPluginProvider } from "./editor-plugin";
 import type { ImageUploadOptions } from "./prosemirror-plugins/image-upload";
 import { setAttributesOnElement, stackOverflowValidateLink } from "./utils";
+import { StackSnippetOptions } from "./plugins/stack-snippets/common";
+import { RichTextOptions } from "../rich-text/editor";
 
 /** Describes each distinct editor type the StacksEditor handles */
 export enum EditorType {
@@ -44,6 +46,8 @@ export interface CommonViewOptions {
     pluginParentContainer?: (view: EditorView) => Element;
     /** Image uploader options */
     imageUpload?: ImageUploadOptions;
+    /** StackSnippet options */
+    stackSnippet?: StackSnippetOptions;
     /** Externally written plugins to add to the editor */
     editorPlugins?: EditorPlugin[];
 }
@@ -155,6 +159,16 @@ export abstract class BaseView implements View {
         const newDoc = this.parseContent(value);
         tr = tr.replaceWith(0, doc.content.size, newDoc);
 
+        this.editorView.dispatch(tr);
+    }
+
+    /** Adds the specified content to a new node at the end of the document */
+    appendContent(value: string) {
+        let tr = this.editorView.state.tr;
+        const doc = this.editorView.state.doc;
+
+        const newContent = this.parseContent(value);
+        tr = tr.insert(doc.content.size, newContent);
         this.editorView.dispatch(tr);
     }
 
