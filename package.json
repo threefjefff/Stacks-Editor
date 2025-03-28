@@ -1,14 +1,32 @@
 {
     "name": "@stackoverflow/stacks-editor",
-    "version": "0.10.9",
+    "version": "0.10.11",
     "description": "",
     "repository": {
         "type": "git",
         "url": "https://github.com/StackExchange/Stacks-Editor.git"
     },
     "main": "./dist/app.bundle.js",
-    "module": "./dist/index.js",
-    "types": "./dist/index.d.ts",
+    "module": "./dist/src/index.js",
+    "types": "./dist/src/index.d.ts",
+    "exports": {
+        ".": {
+            "import": "./dist/src/index.js",
+            "types": "./dist/src/index.d.ts"
+        },
+        "./plugins/sample": {
+            "import": "./dist/plugins/sample/index.js",
+            "types": "./dist/plugins/devx/index.d.ts"
+        },
+        "./plugins/devx": {
+            "import": "./dist/plugins/devx/index.js",
+            "types": "./dist/plugins/devx/index.d.ts"
+        },
+        "./plugins/official": {
+            "import": "./dist/plugins/official/index.js",
+            "types": "./dist/plugins/devx/index.d.ts"
+        }
+    },
     "files": [
         "dist/"
     ],
@@ -88,7 +106,7 @@
     "dependencies": {
         "@lezer/highlight": "^1.2.0",
         "@lezer/markdown": "^1.2.0",
-        "@stackoverflow/stacks-icons": "^6.0.2",
+        "@stackoverflow/stacks-icons": "^6.2.0",
         "markdown-it": "^14.0.0",
         "orderedmap": "^2.1.1",
         "prosemirror-commands": "^1.5.2",

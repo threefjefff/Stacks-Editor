@@ -82,6 +82,14 @@ export interface DropdownMenuItem extends BaseMenuItem {
  */
 export type MenuItem = BaseMenuItem | DropdownMenuItem;
 
+export type CoreMenuBlockNames =
+    | "formatting1"
+    | "code-formatting"
+    | "formatting2"
+    | "formatting3"
+    | "history"
+    | "other";
+
 /**
  * Describes a visual "block"/grouping of menu items
  * @public
@@ -127,7 +135,7 @@ export function makeMenuLinkEntry(
     dom.title = title;
     dom.setAttribute("aria-label", title);
     dom.dataset.controller = "s-tooltip";
-    dom.dataset.sTooltipPlacement = "top";
+    dom.dataset.sTooltipPlacement = "bottom";
 
     // create the svg svg-icon-bg element
     const icon = document.createElement("span");
@@ -260,7 +268,7 @@ export function makeMenuButton(
     button.title = title;
     button.setAttribute("aria-label", title);
     button.dataset.controller = "s-tooltip";
-    button.dataset.sTooltipPlacement = "top";
+    button.dataset.sTooltipPlacement = "bottom";
     button.dataset.key = key;
     button.type = "button";
 

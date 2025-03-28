@@ -41,9 +41,14 @@ import {
     insertRichTextTableCommand,
     toggleList,
     toggleCodeBlock,
+    toggleInlineCode,
 } from "../../rich-text/commands";
 import { _t } from "../localization";
-import { makeMenuButton, makeMenuDropdown } from "./helpers";
+import {
+    CoreMenuBlockNames,
+    makeMenuButton,
+    makeMenuDropdown,
+} from "./helpers";
 import { getShortcut } from "../utils";
 import { CommonViewOptions, EditorType } from "../view";
 import {
@@ -247,6 +252,11 @@ const moreFormattingDropdown = (schema: Schema, options: CommonViewOptions) =>
         )
     );
 
+/** Enforce that Core MenuBlocks have to use a published name */
+interface CoreMenuBlock extends Omit<MenuBlock, "name"> {
+    name: CoreMenuBlockNames;
+}
+
 /**
  * Creates all menu entries for both the rich-text and commonmark editors
  * @param schema The finalized schema for the current editor
@@ -258,7 +268,7 @@ export const createMenuEntries = (
     schema: Schema,
     options: CommonViewOptions,
     editorType: EditorType
-): MenuBlock[] => [
+): CoreMenuBlock[] => [
     {
         name: "formatting1", // TODO better name?
         priority: 0,
@@ -330,7 +340,7 @@ export const createMenuEntries = (
             {
                 key: "toggleCode",
                 richText: {
-                    command: toggleMark(schema.marks.code),
+                    command: toggleInlineCode,
                     active: markActive(schema.marks.code),
                 },
                 commonmark: inlineCodeCommand,

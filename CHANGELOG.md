@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.10.11](https://github.com/StackExchange/Stacks-Editor/compare/v0.10.10...v0.10.11) (2025-03-24)
+
+
+### Features
+
+* devx - add parser logging for each rule stage ([#401](https://github.com/StackExchange/Stacks-Editor/issues/401)) ([3bea908](https://github.com/StackExchange/Stacks-Editor/commit/3bea908e85363a2e726ccac208ecd19291bc29fe))
+
+
+### Bug Fixes
+
+* **link-editor:** link editor glitchiness tweaks ([#403](https://github.com/StackExchange/Stacks-Editor/issues/403)) ([218d4bc](https://github.com/StackExchange/Stacks-Editor/commit/218d4bc8736a93d67b556137ff6d8a639b946b12))
+* **tooltips:** tooltips always go below buttons ([#399](https://github.com/StackExchange/Stacks-Editor/issues/399)) ([f44f8ed](https://github.com/StackExchange/Stacks-Editor/commit/f44f8edea1801e9ab720b14e872893fef7796990))
+
+### [0.10.10](https://github.com/StackExchange/Stacks-Editor/compare/v0.10.9...v0.10.10) (2025-03-17)
+
+
+### Bug Fixes
+
+* **code-blocks:** add empty paragraph at end when using three backticks to create code block ([#396](https://github.com/StackExchange/Stacks-Editor/issues/396)) ([a689fdc](https://github.com/StackExchange/Stacks-Editor/commit/a689fdcb2f87cf8e5572ab8ab4e0417841c227ca))
+* **inline-code:** disallow "inline code" when selection has linebreaks ([#394](https://github.com/StackExchange/Stacks-Editor/issues/394)) ([d8f7ce6](https://github.com/StackExchange/Stacks-Editor/commit/d8f7ce66ed7e80ac5fba182a17347c88fc73dff1))
+* **markdown:** Fix code block selection off by one error ([#393](https://github.com/StackExchange/Stacks-Editor/issues/393)) ([994162e](https://github.com/StackExchange/Stacks-Editor/commit/994162ee32905728748885fa962079406ad2b2cb))
+
 ### [0.10.9](https://github.com/StackExchange/Stacks-Editor/compare/v0.10.8...v0.10.9) (2025-03-07)
 
 
